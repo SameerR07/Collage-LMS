@@ -1,0 +1,14 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Login-page Quick Stats: three totals only (no personal data), readable before sign-in.
+    // Written by the app (signed-in users) after records change.
+    match /public/loginStats {
+      allow read: if true;
+    }
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

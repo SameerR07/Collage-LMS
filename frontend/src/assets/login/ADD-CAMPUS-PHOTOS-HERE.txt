@@ -1,0 +1,21 @@
+Campus photos for the login page
+================================
+
+The two photos on the login page live in this folder:
+
+  campus-1.jpg   top card     (caption: "Placement drives")
+  campus-2.jpg   bottom card  (caption: "Campus to corporate")
+
+To change a photo, replace the file and keep the same name.
+.jpeg, .png and .webp also work. Use photos you have permission to use.
+
+Tips
+- At least 800 pixels wide gives sharp results; under 400 KB each keeps the page fast.
+  (The current two were cut from a small reference picture, so they look a little soft.)
+- The card crops the photo to fit, so keep people near the middle.
+  If faces get cut off, set "position" for that photo in
+  src/config/loginShowcase.js, for example position: 'center 30%'.
+- Captions and alt text are in the same file.
+
+If a photo is removed, a designed navy tile with an icon is shown instead.
+Restart "npm run dev" if a new photo does not appear straight away.

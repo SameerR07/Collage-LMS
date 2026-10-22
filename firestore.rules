@@ -1,0 +1,132 @@
+rules_version = '2';
+
+// Roles live in users/{uid}: { role: 'admin' | 'placement' | 'student', status: 'active' | 'pending' | 'disabled' }.
+// First Admin: create the account in Firebase Authentication, then add users/<that uid> with
+// role "admin" and status "active" in the Firestore console. After that, approve others from the app (Users page).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function hasProfile() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAdmin() { return hasProfile() && profile().role == 'admin' && profile().status == 'active'; }
+    function isPlacementCell() { return hasProfile() && profile().role == 'placement' && profile().status == 'active'; }
+    function isStaff() { return isAdmin() || isPlacementCell(); }
+    function isStudent() { return hasProfile() && profile().role == 'student' && profile().status == 'active'; }
+    // Students act only after proving their email (verification link, or Google sign-in)
+    function verifiedStudent() { return isStudent() && request.auth.token.email_verified == true; }
+    function myEmail() { return request.auth.token.email.lower(); }
+    function changes() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // Login-page Quick Stats: three totals only (no personal data), readable before sign-in.
+    match /public/loginStats {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Accounts. A Placement Cell sign-up starts as a request waiting for approval;
+    // a student sign-up is active at once (the email links it to their Master Data record).
+    // Only an Admin can approve, change roles, switch off or remove.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid && (
+        (request.resource.data.role == 'placement' && request.resource.data.status == 'pending') ||
+        (request.resource.data.role == 'student' && request.resource.data.status == 'active'));
+      allow update, delete: if isAdmin();
+    }
+
+    // Placement drives: staff edit; students read them to see and apply for drives.
+    // NOTE before going live: drive documents also hold emailLog (names + emails of everyone emailed).
+    // Move emailLog to a staff-only collection before opening the student portal on Firebase.
+    match /placements/{id} {
+      allow read: if isStaff() || isStudent();
+      allow write: if isStaff();
+    }
+
+    // Master Data. Admin edits everything; the Placement Cell reads (to email students) and may set
+    // placement status / company (an applicant "Selected"). A student reads only their own record
+    // (same email), may add themselves once if their email was not in Master Data, and may update
+    // their own registration — never their identity (name, roll no, course, batch, email) or company.
+    match /students/{id} {
+      allow read: if isStaff() || (isStudent() && resource.data.email.lower() == myEmail());
+      allow create: if isAdmin() || (verifiedStudent()
+        && request.resource.data.email.lower() == myEmail()
+        && request.resource.data.source == 'Student sign-up'
+        && request.resource.data.placementStatus in ['Eligible', 'Opted Out']);
+      allow update: if isAdmin()
+        || (isPlacementCell() && changes().hasOnly(['placementStatus', 'company', 'placedAt']))
+        || (verifiedStudent() && resource.data.email.lower() == myEmail()
+          && !changes().hasAny(['email', 'name', 'rollNo', 'course', 'batch', 'company', 'source', 'accountUid'])
+          && (!changes().hasAny(['placementStatus']) || (resource.data.placementStatus in ['Eligible', 'In Process', 'Opted Out'] && request.resource.data.placementStatus in ['Eligible', 'In Process', 'Opted Out'])));
+      allow delete: if isAdmin();
+    }
+
+    // Applications (one per student per drive). Students create their own as "Applied" and may only
+    // withdraw / re-apply; the Placement Cell sets every other status.
+    match /applications/{id} {
+      allow read: if isStaff() || (isStudent() && resource.data.studentEmail == myEmail());
+      allow create: if isStaff() || (verifiedStudent() && request.resource.data.studentEmail == myEmail() && request.resource.data.status == 'Applied');
+      allow update: if isStaff() || (verifiedStudent() && resource.data.studentEmail == myEmail()
+        && request.resource.data.studentEmail == myEmail()
+        && ((resource.data.status == 'Applied' && request.resource.data.status == 'Withdrawn')
+          || (resource.data.status == 'Withdrawn' && request.resource.data.status == 'Applied')));
+      allow delete: if isStaff();
+    }
+
+    // Attendance sessions: staff create and run them; students read them (no codes inside).
+    match /attendance/{id} {
+      allow read: if isStaff() || isStudent();
+      allow write: if isStaff();
+    }
+    // Check-in codes: staff only. The rule below reads them to check a student's code.
+    match /attendanceCodes/{id} {
+      allow read, write: if isStaff();
+    }
+    // Attendance marks: staff mark anyone; a student can only mark themselves present, with the
+    // right code, while check-in is open.
+    match /attendanceMarks/{id} {
+      allow read: if isStaff() || (isStudent() && resource.data.studentEmail == myEmail());
+      allow create: if isStaff() || (verifiedStudent()
+        && request.resource.data.studentEmail == myEmail()
+        && request.resource.data.method == 'Code'
+        && request.resource.data.status == 'Present'
+        && get(/databases/$(database)/documents/attendance/$(request.resource.data.sessionId)).data.checkIn == 'Open'
+        && get(/databases/$(database)/documents/attendanceCodes/$(request.resource.data.sessionId)).data.code == request.resource.data.code);
+      allow update, delete: if isStaff();
+    }
+
+    // Email outbox (templated emails only — the mail server builds the content).
+    // Any signed-in account may queue one; the one who queued it may record whether it was sent.
+    match /outbox/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() || (signedIn() && request.resource.data.status == 'queued' && request.resource.data.by == request.auth.uid);
+      allow update: if isStaff() || (signedIn() && resource.data.by == request.auth.uid && changes().hasOnly(['status', 'error', 'at', 'attempts', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // Activity log (Admin page). Everyone signed in writes their own lines and sign-in sessions;
+    // only an Admin can read them. Lines can't be changed afterwards; sessions only by their owner
+    // (last active / signed out).
+    match /activity/{id} {
+      allow read, delete: if isAdmin();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+    match /loginSessions/{id} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && changes().hasOnly(['lastSeenAt', 'lastPage', 'endedAt', 'endReason', 'updatedAt']);
+    }
+
+    // Internships: Admin edits; the Placement Cell can read (needed to recount the login-page stats).
+    match /internships/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // Everything else (industrial visits, talks, …): Admin only.
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
