@@ -1,156 +1,47 @@
-🎓 GJIMT Placement LMS
-A modern Placement & Internship Management System developed for Gian Jyoti Institute of Management & Technology (GJIMT).
+# 🎓 College LMS (Learning Management System)
 
-The platform helps students and placement teams manage student information, internships, placement activities, industry visits, expert talks, and other placement-related data from a centralized system.
+A comprehensive and scalable Learning Management System built for colleges and universities to manage courses, students, faculty, and academic resources efficiently.
 
-🚀 Features
-👨‍🎓 Student Management
-Student registration and profile management
-Student information storage
-View and manage student records
-Placement-related student data
-💼 Internship Management
-Add internship information
-Manage internship records
-Track student internship activities
-🏢 Placement Management
-Placement records
-Company and placement information
-Student placement tracking
-🏭 Industry Visits
-Add and manage industry visit information
-Maintain visit records
-🎤 Expert Talks
-Manage expert/industry talks
-Store talk-related information
-Track industry interaction activities
-🔐 Authentication
-Firebase Authentication
-Secure user login
-User account management
-☁️ Cloud Database
-The application uses Firebase Cloud Firestore for storing application data.
+---
 
-Main collections include:
+## 📌 Features
 
-students
-internships
-placements
-visits
-talks
-🛠️ Technologies Used
-Technology	Purpose
-React.js	Frontend
-Vite	Development & Build Tool
-JavaScript	Application Logic
-Firebase	Authentication & Backend Services
-Cloud Firestore	Database
-CSS	UI Styling
-Git & GitHub	Version Control
-📁 Project Structure
-GJIMT-Placement-LMS/
-│
-├── public/
-│
-├── src/
-│   ├── components/
-│   ├── pages/
-│   ├── lib/
-│   │   └── firebase.js
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── .env.example
-├── package.json
-├── vite.config.js
-└── README.md
-⚙️ Installation & Setup
-1. Clone the Repository
-git clone YOUR_GITHUB_REPOSITORY_URL
-2. Open the Project
-cd GJIMT-Placement-LMS
-3. Install Dependencies
-npm install
-4. Configure Firebase
-Create a .env.local file in the project root.
+- **User Roles & Authentication:** Secure login for Admin, Teachers, and Students (JWT-based).
+- **Course Management:** Add, edit, and organize courses, subjects, and study materials.
+- **Attendance & Grading:** Track student attendance and manage assignments/grades.
+- **Student Dashboard:** Easy access to timetable, lectures, notes, and notices.
+- **Responsive UI:** Fully optimized for mobile, tablet, and desktop screens.
 
-Add your Firebase configuration according to the variables provided in:
+---
 
-.env.example
-Example:
+## 🛠️ Tech Stack
 
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-Important: Never upload your real Firebase credentials or .env.local file to GitHub.
+### Frontend
+- **React.js** / **Next.js**
+- **Tailwind CSS** / CSS3
+- **Axios** (API Calls)
 
-▶️ Run the Project
-Start the development server:
+### Backend
+- **Node.js** & **Express.js**
+- **MongoDB** & **Mongoose** (Database)
+- **JSON Web Tokens (JWT)** & **Bcrypt.js** (Security & Auth)
 
-npm run dev
-The application will normally be available at:
+---
 
-http://localhost:5173
-🗄️ Database
-This project uses Cloud Firestore as its database.
+## 🚀 Getting Started
 
-The application stores placement-related information in collections such as:
+Follow these steps to run the project locally on your machine.
 
-students
-internships
-placements
-visits
-talks
-Firebase Authentication is used for user authentication.
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or higher)
+- [MongoDB](https://www.mongodb.com/) (Local or MongoDB Atlas URI)
+- [Git](https://git-scm.com/)
 
-🔒 Security
-Sensitive configuration is kept outside the repository using environment variables.
+---
 
-.env.local
-should not be committed to GitHub.
+### Installation & Setup
 
-Make sure .gitignore contains:
-
-.env
-.env.local
-.env.*.local
-node_modules/
-dist/
-🎯 Project Objective
-The main objective of this project is to provide GJIMT with a centralized digital platform for managing:
-
-Student placement information
-Internship records
-Placement activities
-Industry visits
-Expert talks
-Student-related placement data
-The system reduces manual record management and makes placement information easier to maintain and access.
-
-🔮 Future Enhancements
-Future versions can include:
-
-📊 Placement analytics dashboard
-📄 Resume upload and management
-📧 Email notifications
-📱 Fully responsive mobile interface
-🔎 Advanced search and filtering
-📈 Placement reports and charts
-🏢 Company management module
-📥 Export data to Excel/PDF
-👨‍💼 Separate Admin and Student dashboards
-🔔 Internship and placement notifications
-👩‍💻 Developed For
-Gian Jyoti Institute of Management & Technology (GJIMT)
-
-Academic Project
-Project: GJIMT Placement LMS Purpose: Placement & Internship Management Database: Firebase Cloud Firestore Authentication: Firebase Authentication
-
-📜 License
-This project is developed for academic and educational purposes.
-
-⭐ Support
-If you find this project useful, consider giving the repository a ⭐ on GitHub.
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/SameerR07/Collage-LMS.git](https://github.com/SameerR07/Collage-LMS.git)
+   cd Collage-LMS
